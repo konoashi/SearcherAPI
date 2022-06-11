@@ -16,34 +16,6 @@ public class App {
     ConcurrentHashMap<String, Long> keyMap
             = new ConcurrentHashMap<>();
 
-    // get apis keys from a txt file
-    public ArrayList<String> getKeys() throws IOException {
-
-        ArrayList<String> keys = new ArrayList<>();
-
-        //read the file
-        try(BufferedReader br = new BufferedReader(new FileReader(API_KEYS_FILE))) {
-            for(String line; (line = br.readLine()) != null; ) {
-                keys.add(line);
-            }
-        }
-
-        return keys;
-    }
-
-    public App() {
-        // insert keys in the map
-        try {
-            for (String key: getKeys()) {
-                keyMap.put(key, System.currentTimeMillis());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // TODO: check if keys are valid
-    }
-
     public static void main(String[] args) {
 //        ConcurrentHashMap<UUID, Integer> m
 //                = new ConcurrentHashMap<>();
@@ -61,4 +33,33 @@ public class App {
 
         new App();
     }
+
+    public App() {
+        // insert keys in the map
+        try {
+            for (String key: getKeys(API_KEYS_FILE)) {
+                keyMap.put(key, System.currentTimeMillis());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // TODO: check if keys are valid
+    }
+
+    // get apis keys from a txt file
+    private ArrayList<String> getKeys(String filename) throws IOException {
+
+        ArrayList<String> keys = new ArrayList<>();
+
+        //read the file
+        try(BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            for(String line; (line = br.readLine()) != null; ) {
+                keys.add(line);
+            }
+        }
+
+        return keys;
+    }
+
 }
