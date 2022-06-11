@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.concurrent.TimeUnit;
 
 
 public class Main {
@@ -18,6 +18,14 @@ public class Main {
         for (int i = 1; i < keys.length+1; i++) {
             m.put(UUID.fromString(keys[i-1]), 0);
         }
-        System.out.println(m);
+
+        var producerConsumer = new ProducerConsumer();
+        try {
+            producerConsumer.run(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
