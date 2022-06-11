@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class Main {
-    public static String[] keys = {"a74dfce5-f68c-4405-a0b6-c3607ad6f30b", "ea4095c4-3dcf-4676-9b37-f6756e99bd22"};
+    public static String[] keys = {"7e57ef59-4c16-4f4a-ab7c-e095596b189b"};
     public static void main(String[] args) {
         ConcurrentHashMap<UUID, Integer> m
                 = new ConcurrentHashMap<>();
