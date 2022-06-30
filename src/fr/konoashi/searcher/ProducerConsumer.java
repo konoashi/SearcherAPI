@@ -87,6 +87,7 @@ public class ProducerConsumer {
                 isRunning = false;
                 break;
             }
+            System.out.println(uuids.size());
 
             for (String s : keys) {
                 if (keyToUsage.get(UUID.fromString(key)) > API_KEY_LIMIT && !key.equals(s)) {

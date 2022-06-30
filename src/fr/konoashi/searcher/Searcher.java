@@ -52,7 +52,7 @@ public class Searcher {
         ArrayList<JsonObject> items = new ArrayList<>();
 
         // get pets
-        JsonArray petsJson = playerJson.getAsJsonArray("pets");
+        /*JsonArray petsJson = playerJson.getAsJsonArray("pets");
         if (petsJson != null) {
             items.addAll(getPets(petsJson, playerUuid, profileUuid));
         }
@@ -61,6 +61,13 @@ public class Searcher {
         JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
         if (inventoryJson != null) {
             items.addAll(getInventory(inventoryJson, playerUuid, profileUuid));
+        }*/
+
+
+        // get enderchest
+        JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
+        if (enderChestJson != null) {
+            items.addAll(getEnderChest(enderChestJson, playerUuid, profileUuid));
         }
 
         return items;
@@ -126,6 +133,33 @@ public class Searcher {
                 }
 
                 JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "inventory");
+                items.add(formattedItemJson);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
+
+    private static ArrayList<JsonObject> getEnderChest(JsonObject enderChestJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        String nbt64 = enderChestJson.get("data").getAsString();
+
+        try {
+            NBTCompound nbtlist = b64ToNbtCompound(nbt64);
+            String nbtJsonString = nbtlist.toString();
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                if (itemJson.entrySet().size() == 0) {
+                    continue;
+                }
+
+                JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "enderchest");
                 items.add(formattedItemJson);
             }
 
