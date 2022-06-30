@@ -98,8 +98,9 @@ public class ProducerConsumer {
             //Increment by 1 the key usage
             keyToUsage.merge(key, 1, Integer::sum);
 
-            Reader  rd;
+            BufferedReader rd;
             StringBuilder sb = new StringBuilder();
+            String line;
             var uuid = uuids.poll(1, TimeUnit.SECONDS);
             if (uuid == null) {
                 System.out.println("[LOG] No uuid left, stopping");
@@ -114,28 +115,47 @@ public class ProducerConsumer {
                     " from " + Thread.currentThread().getName()
             );
 
-            URL url = new URL("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + uuid);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Accept-Encoding", "gzip");
-            con.connect();
 
-            if ("gzip".equals(con.getContentEncoding())) {
-                rd = new InputStreamReader(new GZIPInputStream(con.getInputStream()));
-            }
-            else {
-                rd = new InputStreamReader(con.getInputStream());
-            }
+            try {
+                URL url = new URL("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + uuid);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("GET");
+                con.setRequestProperty("Accept-Encoding", "gzip");
+                con.setConnectTimeout(2000);
+                con.connect();
 
-            while (true) {
-                int ch = rd.read();
-                if (ch==-1) {
-                    break;
+//                rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
+                if ("gzip".equals(con.getContentEncoding())) {
+                    rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
                 }
-                sb.append((char)ch);
+                else {
+                    rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                }
+
+                while ((line = rd.readLine()) != null) {
+                    sb.append(line).append('\n');
+                }
+                con.disconnect();
+            } catch (java.net.SocketTimeoutException e) {
+                System.err.println("[ERROR] Socket timeout, adding back to the queue");
+                try {
+                    uuids.put(uuid);
+                } catch (Exception e1) {
+                    System.err.println("Error while adding a uuid to the queue");
+                    e1.printStackTrace();
+                }
+                continue;
+            } catch (java.io.IOException e) {
+                System.err.println("[ERROR] Exception while deflating the gzip content, adding back to the queue");
+                try {
+                    uuids.put(uuid);
+                } catch (Exception e1) {
+                    System.err.println("Error while adding a uuid to the queue");
+                    e1.printStackTrace();
+                }
+                continue;
             }
 
-//            System.out.println(sb);
             System.out.println("[LOG] Got response from API");
 
             JsonObject profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
