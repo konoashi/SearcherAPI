@@ -2,6 +2,11 @@ package fr.konoashi.searcher;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 
 import static fr.konoashi.searcher.App.*;
 
@@ -16,7 +21,7 @@ import java.util.zip.GZIPInputStream;
 public class ProducerConsumer {
 
     final int API_KEY_LIMIT = 119;
-    final int MONGO_BATCH_SIZE = 100;
+    final int MONGO_BATCH_SIZE = 1000;
     final int THREADS = 6;
 
     final Gson gson = new Gson();
@@ -27,7 +32,6 @@ public class ProducerConsumer {
     boolean isRunning = true;
 
     public ProducerConsumer() {
-
         try {
             try(BufferedReader br = new BufferedReader(new FileReader("./uuids.txt"))) {
                 for(String line; (line = br.readLine()) != null; ) {
@@ -43,20 +47,34 @@ public class ProducerConsumer {
             e.printStackTrace();
         }
 
-//        //Friendlist à ajouter ici
-//        for (int i = 0; i < 1; i++) {
-//            var dataUnit = "2103bf99-d770-436f-9c9b-c235d55f819f";
-//            try {
-//                uuids.put(dataUnit);
-//            } catch (Exception e) {
-//                System.err.println("Error while adding a uuid to the queue");
-//                e.printStackTrace();
-//            }
-//        }
+        //TODO: Friendlist à ajouter ici
+    }
+
+    private void insertInMongo(MongoCollection<Document> collection, ArrayList<JsonObject> items) {
+        ArrayList<Document> documents = new ArrayList<>();
+        for (JsonObject item : items) {
+            documents.add(Document.parse(gson.toJson(item)));
+        }
+        collection.insertMany(documents);
     }
 
     private final Callable<Void> consumer = () -> {
         ArrayList<JsonObject> itemsToInsert = new ArrayList<>();
+
+        // Replace the uri string with your MongoDB deployment's connection string
+        String uri = "mongodb://localhost:27017";
+        MongoClient mongoClient;
+        MongoDatabase database;
+        MongoCollection<Document> collection;
+        try {
+            mongoClient = MongoClients.create(uri);
+            database = mongoClient.getDatabase("skygate");
+            collection = database.getCollection("items");
+        } catch (Exception e) {
+            System.err.println("Error while connecting to MongoDB");
+            e.printStackTrace();
+            return null;
+        }
 
         while (isRunning) {
             try {
@@ -67,7 +85,13 @@ public class ProducerConsumer {
                 itemsToInsert.add(item);
                 if (itemsToInsert.size() == MONGO_BATCH_SIZE) {
                     //TODO: MONGO REQUEST
-                    System.out.println("[LOG] Consumed " + itemsToInsert.size() + " items, " + uuids.size() + " uuids left");
+
+                    System.out.println(
+                            "[LOG] Inserted " + itemsToInsert.size() +
+                                    " items, " + items.size() +
+                                    " items left, " + uuids.size() + " uuids left"
+                    );
+                    insertInMongo(collection, itemsToInsert);
                     itemsToInsert.clear();
                 }
             } catch (Exception e) {
@@ -76,6 +100,7 @@ public class ProducerConsumer {
             }
         }
 
+        insertInMongo(collection, itemsToInsert);
         System.out.println("[LOG] Consumer stopped");
         return null;
     };
