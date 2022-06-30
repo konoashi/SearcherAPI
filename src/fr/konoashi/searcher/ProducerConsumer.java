@@ -123,7 +123,7 @@ public class ProducerConsumer {
 //            System.out.println(sb);
 
             JsonObject profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
-            ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
+            ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson, uuid);
 
 
             if (profilesItems == null) {
