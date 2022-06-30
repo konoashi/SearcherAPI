@@ -11,24 +11,24 @@ import static fr.konoashi.searcher.App.*;
 
 public class ProducerConsumer {
 
-    private int API_KEY_LIMIT = 119;
-    private BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
+    final int API_KEY_LIMIT = 119;
 
+    private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
 
-
-    private Callable<Void> consumer = () -> {
+    private final Callable<Void> consumer = () -> {
         while (true) {
             String key = keys.get(0);
-            BufferedReader rd  = null;
-            StringBuilder sb = null;
-            String line = null;
-            var dataUnit = uuids.poll(5, TimeUnit.SECONDS);
-            if (dataUnit == null)
+            BufferedReader rd;
+            StringBuilder sb = new StringBuilder();
+            String line;
+            var uuid = uuids.poll(5, TimeUnit.SECONDS);
+            if (uuid == null)
                 break;
 
-            for (int i = 0; i < keys.size(); i++) {
-                if (keyMap.get(UUID.fromString(key)) > API_KEY_LIMIT && !key.equals(keys.get(i))) {
-                    key = keys.get(i);
+            for (String s : keys) {
+                if (keyMap.get(UUID.fromString(key)) > API_KEY_LIMIT && !key.equals(s)) {
+                    key = s;
+                    break;
                 }
             }
             if (keyMap.get(UUID.fromString(key)) > API_KEY_LIMIT) {
@@ -36,16 +36,16 @@ public class ProducerConsumer {
                 continue;
             }
             keyMap.merge(UUID.fromString(key), 1, Integer::sum);
-            System.out.println("Consumed " + dataUnit + " | " + keyMap.get(UUID.fromString(key)) + " key "+ key +" from " + Thread.currentThread().getName());
-            URL url = new URL("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + dataUnit);
+            System.out.println("Consumed " + uuid + " | " + keyMap.get(UUID.fromString(key)) + " key "+ key + " from " + Thread.currentThread().getName());
+            URL url = new URL("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + uuid);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.connect();
+
             rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            sb = new StringBuilder();
             while ((line = rd.readLine()) != null)
             {
-                sb.append(line + '\n');
+                sb.append(line).append('\n');
             }
 
             //CheckStuff(new JsonParser().parse(String.valueOf(sb)), dataUnit);
@@ -55,7 +55,7 @@ public class ProducerConsumer {
     };
 
 
-    private Callable<Void> producer = () -> {
+    private final Callable<Void> producer = () -> {
 
         //Friendlist a ajouter ici
         for (int i = 0; i < 1; i++) {
