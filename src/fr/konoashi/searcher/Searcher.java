@@ -3,17 +3,13 @@ package fr.konoashi.searcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.nullicorn.nedit.type.NBTList;
-import me.nullicorn.nedit.type.TagType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.*;
-import java.util.Objects;
-import java.util.UUID;
 
-import static fr.konoashi.searcher.Base64.BASE64TOJSON;
+import static fr.konoashi.searcher.Base64.b64ToNbtList;
 
 public class Searcher {
 
@@ -52,9 +48,16 @@ public class Searcher {
 
         ArrayList<JsonObject> items = new ArrayList<>();
 
+        // get pets
         JsonArray petsJson = playerJson.getAsJsonArray("pets");
         if (petsJson != null) {
             items.addAll(getPets(petsJson, playerUuid, profileUuid));
+        }
+
+        // get inventory
+        JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
+        if (inventoryJson != null) {
+            items.addAll(getInventory(inventoryJson, playerUuid, profileUuid));
         }
 
         return items;
@@ -101,6 +104,29 @@ public class Searcher {
         }
 
         return pets;
+    }
+
+    private static ArrayList<JsonObject> getInventory(JsonObject inventoryJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        String nbt64 = inventoryJson.get("data").getAsString();
+        NBTList nbtlist;
+        try {
+            nbtlist = b64ToNbtList(nbt64);
+            nbtlist.toString();
+
+//            for (int i = 0; i < nbtlist.size(); i++) {
+//                if (nbtlist.getCompound(i).getCompound("tag") != null) {
+//                    EXOTIC(nbtlist.get(i), profile, uuid, "Inventory");
+//                    String displayname = nbtlist.getCompound(i).getCompound("tag").getCompound("display").getString("Name");
+//                    String name = nbtlist.getCompound(i).getCompound("tag").getCompound("ExtraAttributes").getString("id");
+//                }
+//            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
     }
 
     private static JsonObject addProvenance(JsonObject item, String playerUuid, String profileUuid, String container) {

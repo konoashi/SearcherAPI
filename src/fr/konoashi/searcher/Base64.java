@@ -1,13 +1,12 @@
 package fr.konoashi.searcher;
 
 import me.nullicorn.nedit.NBTReader;
-import me.nullicorn.nedit.type.NBTCompound;
 import me.nullicorn.nedit.type.NBTList;
 
 import java.io.IOException;
 
 public class Base64 {
-    public static NBTList BASE64TOJSON(String base64) throws IOException {
+    public static NBTList b64ToNbtList(String base64) throws IOException {
 
         return NBTReader.readBase64(base64)
                 .getList("i");
