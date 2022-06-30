@@ -87,7 +87,6 @@ public class ProducerConsumer {
                 isRunning = false;
                 break;
             }
-            System.out.println(uuids.size());
 
             for (String s : keys) {
                 if (keyToUsage.get(UUID.fromString(key)) > API_KEY_LIMIT && !key.equals(s)) {
@@ -99,6 +98,8 @@ public class ProducerConsumer {
                 System.out.println("No more keys available");
                 continue;
             }
+            //TODO: Reset key loop
+            //Increment by 1 the key
             keyToUsage.merge(UUID.fromString(key), 1, Integer::sum);
 
             System.out.println(
@@ -124,6 +125,7 @@ public class ProducerConsumer {
             JsonObject profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
             ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
 
+
             if (profilesItems == null) {
                 continue;
             }
@@ -147,7 +149,7 @@ public class ProducerConsumer {
         pool.submit(consumer);
 
         //pool.submit(consumer);
-        pool.shutdown();
+        //pool.shutdown();
         //pool.awaitTermination(forHowLong, unit);
     }
 }

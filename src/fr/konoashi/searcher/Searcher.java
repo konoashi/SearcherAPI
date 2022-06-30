@@ -1,14 +1,14 @@
 package fr.konoashi.searcher;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import me.nullicorn.nedit.type.NBTCompound;
+import me.nullicorn.nedit.type.NBTList;
+import me.nullicorn.nedit.type.TagType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.*;
+import java.util.Objects;
 
 import static fr.konoashi.searcher.Base64.b64ToNbtCompound;
 
@@ -61,13 +61,18 @@ public class Searcher {
         JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
         if (inventoryJson != null) {
             items.addAll(getInventory(inventoryJson, playerUuid, profileUuid));
-        }*/
-
+        }
 
         // get enderchest
         JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
         if (enderChestJson != null) {
             items.addAll(getEnderChest(enderChestJson, playerUuid, profileUuid));
+        }*/
+
+        // get wardrobe
+        JsonObject wardrobeJson = playerJson.getAsJsonObject("wardrobe_contents");
+        if (wardrobeJson != null) {
+            items.addAll(getWardrobeJson(wardrobeJson, playerUuid, profileUuid));
         }
 
         return items;
@@ -124,6 +129,7 @@ public class Searcher {
         try {
             NBTCompound nbtlist = b64ToNbtCompound(nbt64);
             String nbtJsonString = nbtlist.toString();
+            //TODO: fix error parsing pet json
             JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
 
             for (JsonElement itemElement : nbtJson) {
@@ -151,6 +157,7 @@ public class Searcher {
         try {
             NBTCompound nbtlist = b64ToNbtCompound(nbt64);
             String nbtJsonString = nbtlist.toString();
+            //TODO: fix error parsing pet json
             JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
 
             for (JsonElement itemElement : nbtJson) {
@@ -170,6 +177,39 @@ public class Searcher {
         return items;
     }
 
+    private static ArrayList<JsonObject> getWardrobeJson(JsonObject wardrobeJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        String nbt64 = wardrobeJson.get("data").getAsString();
+
+        try {
+            NBTCompound nbtlist = b64ToNbtCompound(nbt64);
+            JsonArray petsJsonArray = getPetsJson(nbtlist);
+            NBTCompound nbtListWithoutPets = petsNbtDispatch(nbtlist);
+
+            String nbtJsonString = nbtListWithoutPets.toString();
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+            nbtJson.addAll(petsJsonArray);
+
+
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                if (itemJson.entrySet().size() == 0) {
+                    continue;
+                }
+
+                JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "wardrobe");
+                items.add(formattedItemJson);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
+
     private static JsonObject addProvenance(JsonObject item, String playerUuid, String profileUuid, String container) {
         JsonObject provenance = new JsonObject();
         provenance.addProperty("player_uuid", playerUuid);
@@ -178,6 +218,38 @@ public class Searcher {
         provenance.add("item", item);
 
         return provenance;
+    }
+
+    private static NBTCompound petsNbtDispatch(NBTCompound nbtlist) {
+
+        NBTList itemsList = nbtlist.getList("i");
+        for (int i = 0; i < itemsList.size(); i++) {
+            if (itemsList.getCompound(i).keySet().size() == 0) {
+                continue;
+            }
+            if (Objects.equals(itemsList.getCompound(i).getCompound("tag").getCompound("ExtraAttributes").get("id").toString(), "PET")) {
+                //itemsList.removeIf(); peut etre utile mais je sais pas comment l'utiliser
+                itemsList.remove(i);
+            }
+        }
+
+        return nbtlist;
+    }
+
+    private static JsonArray getPetsJson(NBTCompound nbtlist) {
+
+        NBTList itemsList = nbtlist.getList("i");
+        JsonArray pets = new JsonArray();
+        for (int i = 0; i < itemsList.size(); i++) {
+            if (itemsList.getCompound(i).keySet().size() == 0) {
+                continue;
+            }
+            if (Objects.equals(itemsList.getCompound(i).getCompound("tag").getCompound("ExtraAttributes").get("id").toString(), "PET")) {
+                pets.add(new JsonParser().parse(itemsList.getCompound(i).getCompound("tag").getCompound("ExtraAttributes").get("petInfo").toString()).getAsJsonObject());
+            }
+        }
+
+        return pets;
     }
 //
 //    private void WARDROBE(JsonElement data, String profile, UUID uuid) {
