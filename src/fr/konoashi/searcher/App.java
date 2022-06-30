@@ -32,7 +32,7 @@ public class App {
             e.printStackTrace();
         }
 
-        System.out.println(keyToUsage);
+//        System.out.println(keyToUsage);
         // TODO: check if keys are valid
 
         //Data Consumer & Producer

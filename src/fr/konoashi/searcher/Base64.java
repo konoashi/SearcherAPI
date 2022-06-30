@@ -1,15 +1,14 @@
 package fr.konoashi.searcher;
 
 import me.nullicorn.nedit.NBTReader;
-import me.nullicorn.nedit.type.NBTList;
+import me.nullicorn.nedit.type.NBTCompound;
 
 import java.io.IOException;
 
 public class Base64 {
-    public static NBTList b64ToNbtList(String base64) throws IOException {
+    public static NBTCompound b64ToNbtCompound(String base64) throws IOException {
 
-        return NBTReader.readBase64(base64)
-                .getList("i");
+        return NBTReader.readBase64(base64);
     }
 
     public static String getNameFromTag(String base64) throws IOException {

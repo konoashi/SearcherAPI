@@ -1,17 +1,22 @@
 package fr.konoashi.searcher;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.nullicorn.nedit.type.NBTCompound;
 import me.nullicorn.nedit.type.NBTList;
+import me.nullicorn.nedit.type.TagType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.*;
 
-import static fr.konoashi.searcher.Base64.b64ToNbtList;
+import static fr.konoashi.searcher.Base64.b64ToNbtCompound;
 
 public class Searcher {
+
+    private static Gson gson = new Gson();
 
     public static ArrayList<JsonObject> getProfilesItems(JsonObject profilesJson) {
         JsonArray profiles = profilesJson.getAsJsonArray("profiles");
@@ -48,11 +53,11 @@ public class Searcher {
 
         ArrayList<JsonObject> items = new ArrayList<>();
 
-        // get pets
-        JsonArray petsJson = playerJson.getAsJsonArray("pets");
-        if (petsJson != null) {
-            items.addAll(getPets(petsJson, playerUuid, profileUuid));
-        }
+//        // get pets
+//        JsonArray petsJson = playerJson.getAsJsonArray("pets");
+//        if (petsJson != null) {
+//            items.addAll(getPets(petsJson, playerUuid, profileUuid));
+//        }
 
         // get inventory
         JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
@@ -110,22 +115,24 @@ public class Searcher {
         ArrayList<JsonObject> items = new ArrayList<>();
 
         String nbt64 = inventoryJson.get("data").getAsString();
-        NBTList nbtlist;
-        try {
-            nbtlist = b64ToNbtList(nbt64);
-            nbtlist.toString();
 
-//            for (int i = 0; i < nbtlist.size(); i++) {
-//                if (nbtlist.getCompound(i).getCompound("tag") != null) {
-//                    EXOTIC(nbtlist.get(i), profile, uuid, "Inventory");
-//                    String displayname = nbtlist.getCompound(i).getCompound("tag").getCompound("display").getString("Name");
-//                    String name = nbtlist.getCompound(i).getCompound("tag").getCompound("ExtraAttributes").getString("id");
-//                }
-//            }
+        try {
+            NBTCompound nbtlist = b64ToNbtCompound(nbt64);
+            String nbtJsonString = nbtlist.toString().replace("{}", "null");
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "inventory");
+
+                items.add(formattedItemJson);
+                System.out.println(formattedItemJson);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        System.out.println(items.size());
         return items;
     }
 

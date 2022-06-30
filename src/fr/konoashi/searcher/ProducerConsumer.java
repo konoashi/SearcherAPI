@@ -118,7 +118,7 @@ public class ProducerConsumer {
                 sb.append(line).append('\n');
             }
 
-            System.out.println(sb);
+//            System.out.println(sb);
 
             JsonObject profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
             ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
