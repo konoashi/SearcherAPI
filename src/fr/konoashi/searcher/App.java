@@ -9,13 +9,10 @@ import java.util.concurrent.*;
 
 public class App {
 
-    public static LinkedList<JsonElement> datacheck = new LinkedList<>();
-
     String API_KEYS_FILE = "keys.txt";
-    static ArrayList<String> keys = new ArrayList<>();
 
     // Map<apiKey, lastUsed>
-    static ConcurrentHashMap<UUID, Integer> keyToUsage
+    static ConcurrentHashMap<String, Integer> keyToUsage
             = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
@@ -26,13 +23,13 @@ public class App {
         // insert keys in the map
         try {
             for (String key: getKeys(API_KEYS_FILE)) {
-                keyToUsage.put(UUID.fromString(key), 0);
+                keyToUsage.put(key, 0);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-//        System.out.println(keyToUsage);
+        System.out.println(keyToUsage);
         // TODO: check if keys are valid
 
         //Data Consumer & Producer
@@ -53,7 +50,6 @@ public class App {
         try(BufferedReader br = new BufferedReader(new FileReader(filename))) {
             for(String line; (line = br.readLine()) != null; ) {
                 keys.add(line);
-                App.keys.add(line);
             }
         }
 

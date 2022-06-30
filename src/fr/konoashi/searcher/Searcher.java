@@ -1,23 +1,23 @@
 package fr.konoashi.searcher;
 
-import com.google.gson.*;
-import me.nullicorn.nedit.type.NBTCompound;
-import me.nullicorn.nedit.type.NBTList;
-import me.nullicorn.nedit.type.TagType;
+import static fr.konoashi.searcher.Base64.b64ToNbtCompound;
+import static fr.konoashi.searcher.Utils.nbtCompoundToString;
 
+import me.nullicorn.nedit.type.NBTCompound;
+import com.google.gson.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.*;
-import java.util.Objects;
 
-import static fr.konoashi.searcher.Base64.b64ToNbtCompound;
-import static fr.konoashi.searcher.Utils.nbtCompoundToString;
 
 public class Searcher {
 
     private static final Gson gson = new Gson();
 
-    public static ArrayList<JsonObject> getProfilesItems(JsonObject profilesJson, String uuid) {
+    public static ArrayList<JsonObject> getProfilesItems(JsonObject profilesJson) {
+        if (profilesJson == null || profilesJson.isJsonNull() || !profilesJson.has("profiles") || profilesJson.get("profiles").isJsonNull()) {
+            return null;
+        }
         JsonArray profiles = profilesJson.getAsJsonArray("profiles");
         if (profiles == null) {
             return null;
@@ -26,28 +26,22 @@ public class Searcher {
         ArrayList<JsonObject> items = new ArrayList<>();
         for (JsonElement profileElement : profiles) {
             JsonObject profileJson = profileElement.getAsJsonObject();
-            ArrayList<JsonObject> profileItems = getProfileItems(profileJson, uuid);
+            ArrayList<JsonObject> profileItems = getProfileItems(profileJson);
             items.addAll(profileItems);
         }
 
         return items;
     }
 
-    public static ArrayList<JsonObject> getProfileItems(JsonObject profileJson, String uuid) {
+    public static ArrayList<JsonObject> getProfileItems(JsonObject profileJson) {
 
         String profileUuid = profileJson.get("profile_id").getAsString();
-
-        String cuteName = profileJson.get("cute_name").getAsString();
-        System.out.println("Profile: " + cuteName + " (" + profileUuid + ")");
+//        String cuteName = profileJson.get("cute_name").getAsString();
 
         ArrayList<JsonObject> items = new ArrayList<>();
         for (Entry<String, JsonElement> memberEntry : profileJson.getAsJsonObject("members").entrySet()) {
             String memberUuid = memberEntry.getKey();
             JsonObject memberJson = memberEntry.getValue().getAsJsonObject();
-            if (!Objects.equals(memberUuid, uuid)) {
-                continue;
-            }
-            System.out.println("Member: " + "" + " (" + memberUuid + ")");
             ArrayList<JsonObject> profileItems = getMemberItems(memberJson, memberUuid, profileUuid);
             items.addAll(profileItems);
         }
@@ -62,87 +56,56 @@ public class Searcher {
         // get pets
         JsonArray petsJson = playerJson.getAsJsonArray("pets");
         if (petsJson != null) {
-            items.addAll(getPets(petsJson, playerUuid, profileUuid));
+            items.addAll(getPets(petsJson, playerUuid, profileUuid, "pets"));
         }
 
-        // get inventory
-        JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
-        if (inventoryJson != null) {
-            items.addAll(getInventory(inventoryJson, playerUuid, profileUuid));
-        }
+//        // get inventory
+//        JsonObject inventoryJson = playerJson.getAsJsonObject("inv_contents");
+//        if (inventoryJson != null) {
+//            items.addAll(getInventory(inventoryJson, playerUuid, profileUuid, "inv"));
+//        }
+//
+//        // get enderchest
+//        JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
+//        if (enderChestJson != null) {
+//            items.addAll(getInventory(enderChestJson, playerUuid, profileUuid, "ender_chest"));
+//        }
+//
+//        // get wardrobe
+//        JsonObject wardrobeJson = playerJson.getAsJsonObject("wardrobe_contents");
+//        if (wardrobeJson != null) {
+//            items.addAll(getInventory(wardrobeJson, playerUuid, profileUuid, "wardrobe"));
+//        }
+//
+//        // get storage backpack
+//        JsonObject backpackJson = playerJson.getAsJsonObject("backpack_contents");
+//        if (backpackJson != null) {
+//            items.addAll(getMultipleInventories(backpackJson, playerUuid, profileUuid, "backpack"));
+//        }
+//
+//        // get vault
+//        JsonObject vaultJson = playerJson.getAsJsonObject("personal_vault_contents");
+//        if (vaultJson != null) {
+//            items.addAll(getInventory(vaultJson, playerUuid, profileUuid, "vault"));
+//        }
 
-        // get enderchest
-        JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
-        if (enderChestJson != null) {
-            items.addAll(getEnderChest(enderChestJson, playerUuid, profileUuid));
-        }
-
-        // get wardrobe
-        JsonObject wardrobeJson = playerJson.getAsJsonObject("wardrobe_contents");
-        if (wardrobeJson != null) {
-            items.addAll(getWardrobeJson(wardrobeJson, playerUuid, profileUuid));
-        }
-
-        // get storage backpack
-        JsonObject backpackJson = playerJson.getAsJsonObject("backpack_contents");
-        if (backpackJson != null) {
-            items.addAll(getBackpackJson(backpackJson, playerUuid, profileUuid));
-        }
-
-        // get vault
-        JsonObject vaultJson = playerJson.getAsJsonObject("personal_vault_contents");
-        if (vaultJson != null) {
-            items.addAll(getVaultJson(vaultJson, playerUuid, profileUuid));
-        }
-
-
+//        System.out.println("[LOG] Gathered " + items.size() + " items from " + playerUuid + " (" + profileUuid + ")");
         return items;
     }
 
-//    private void CheckStuff(JsonElement data, String uuid) {
-//        for (int i = 0; i < data.getAsJsonObject().getAsJsonArray("profiles").size(); i++) {
-//            JsonElement profile = data.getAsJsonObject().getAsJsonArray("profiles").get(i);
-//            JsonElement member = profile.getAsJsonObject().get("members").getAsJsonObject().get(uuid.replaceAll("-", ""));
-//
-//
-//            if(member.getAsJsonObject().getAsJsonArray("pets") != null) {
-//                getPets(member.getAsJsonObject().getAsJsonArray("pets"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//            if(member.getAsJsonObject().get("wardrobe_contents") != null) {
-//                WARDROBE(member.getAsJsonObject().get("wardrobe_contents"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//            if(member.getAsJsonObject().get("inv_contents") != null) {
-//                INVENTORY(member.getAsJsonObject().get("inv_contents"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//            if(member.getAsJsonObject().get("ender_chest_contents") != null) {
-//                ENDERCHEST(member.getAsJsonObject().get("ender_chest_contents"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//            if(member.getAsJsonObject().get("backpack_contents") != null) {
-//                STORAGE(member.getAsJsonObject().get("backpack_contents"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//            if(member.getAsJsonObject().get("personal_vault_contents") != null) {
-//                VAULT(member.getAsJsonObject().get("personal_vault_contents"), profile.getAsJsonObject().get("cute_name").getAsString(), UUID.fromString(uuid));
-//            }
-//
-//
-//            //datacheck.add(new JsonParser().parse(String.valueOf(sb)));
-//        }
-//    }
-    private static ArrayList<JsonObject> getPets(JsonArray petsJson, String playerUuid, String profileUuid) {
+    private static ArrayList<JsonObject> getPets(JsonArray petsJson, String playerUuid, String profileUuid, String location) {
         ArrayList<JsonObject> pets = new ArrayList<>();
 
         for (JsonElement petElement : petsJson.getAsJsonArray()) {
-
             JsonObject petJson = petElement.getAsJsonObject();
-            JsonObject formattedPetJson = addProvenance(petJson, playerUuid, profileUuid, "pets_menu");
-
+            JsonObject formattedPetJson = handleItem(petJson, playerUuid, profileUuid, location);
             pets.add(formattedPetJson);
         }
 
         return pets;
     }
 
-    private static ArrayList<JsonObject> getInventory(JsonObject inventoryJson, String playerUuid, String profileUuid) {
+    private static ArrayList<JsonObject> getInventory(JsonObject inventoryJson, String playerUuid, String profileUuid, String location) {
         ArrayList<JsonObject> items = new ArrayList<>();
 
         String nbt64 = inventoryJson.get("data").getAsString();
@@ -159,7 +122,7 @@ public class Searcher {
                 if (itemJson.entrySet().size() == 0) {
                     continue;
                 }
-                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "inventory");
+                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, location);
                 items.add(formattedItemJson);
             }
 
@@ -170,127 +133,29 @@ public class Searcher {
         return items;
     }
 
-    private static ArrayList<JsonObject> getEnderChest(JsonObject enderChestJson, String playerUuid, String profileUuid) {
-        ArrayList<JsonObject> items = new ArrayList<>();
-
-        String nbt64 = enderChestJson.get("data").getAsString();
-
-        try {
-            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
-            String nbtJsonString = nbtCompoundToString(nbtCompound);
-
-            //TODO: fix error parsing pet json
-            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-
-            for (JsonElement itemElement : nbtJson) {
-                JsonObject itemJson = itemElement.getAsJsonObject();
-                if (itemJson.entrySet().size() == 0) {
-                    continue;
-                }
-                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "enderchest");
-                items.add(formattedItemJson);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return items;
-    }
-
-
-    private static ArrayList<JsonObject> getBackpackJson(JsonObject backpackJson, String playerUuid, String profileUuid) {
+    private static ArrayList<JsonObject> getMultipleInventories(JsonObject backpackJson, String playerUuid, String profileUuid, String location) {
         ArrayList<JsonObject> items = new ArrayList<>();
 
         for (int i = 0; i < backpackJson.size(); i++) {
-            String nbt64 = backpackJson.getAsJsonObject(Integer.toString(i)).get("data").getAsString();
+            JsonObject inventoryJson = backpackJson.getAsJsonObject(Integer.toString(i));
 
-            try {
-                NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
-                String nbtJsonString = nbtCompoundToString(nbtCompound);
-
-                //TODO: fix error parsing pet json
-                JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-
-                for (JsonElement itemElement : nbtJson) {
-                    JsonObject itemJson = itemElement.getAsJsonObject();
-                    if (itemJson.entrySet().size() == 0) {
-                        continue;
-                    }
-                    JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "backpack " + (i+1));
-                    items.add(formattedItemJson);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String _location = location + " " + (i+1);
+            items.addAll(getInventory(inventoryJson, playerUuid, profileUuid, _location));
 
         }
-
 
         return items;
     }
 
-    private static ArrayList<JsonObject> getVaultJson(JsonObject vaultJson, String playerUuid, String profileUuid) {
-        ArrayList<JsonObject> items = new ArrayList<>();
-
-        String nbt64 = vaultJson.get("data").getAsString();
-
-        try {
-            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
-            String nbtJsonString = nbtCompoundToString(nbtCompound);
-
-            //TODO: fix error parsing pet json
-            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-
-            for (JsonElement itemElement : nbtJson) {
-                JsonObject itemJson = itemElement.getAsJsonObject();
-                if (itemJson.entrySet().size() == 0) {
-                    continue;
-                }
-                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "vault");
-                items.add(formattedItemJson);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return items;
-    }
-    private static ArrayList<JsonObject> getWardrobeJson(JsonObject wardrobeJson, String playerUuid, String profileUuid) {
-        ArrayList<JsonObject> items = new ArrayList<>();
-
-        String nbt64 = wardrobeJson.get("data").getAsString();
-
-        try {
-            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
-            String nbtJsonString = nbtCompoundToString(nbtCompound);
-
-            //TODO: fix error parsing pet json
-            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-
-            for (JsonElement itemElement : nbtJson) {
-                JsonObject itemJson = itemElement.getAsJsonObject();
-                if (itemJson.entrySet().size() == 0) {
-                    continue;
-                }
-                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "wardrobe");
-                items.add(formattedItemJson);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return items;
-    }
     private static JsonObject handleItem(JsonObject itemJson, String playerUuid, String profileUuid, String container) {
 
-        if (itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id").getAsString().equals("PET")) {
-            System.out.println("FOUND A PET !");
+        if (
+                itemJson.getAsJsonObject("tag") != null &&
+                itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes") != null &&
+                itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id") != null &&
+                itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id").getAsString().equals("PET")
+        ) {
             parsePetInfo(itemJson);
-            System.out.println(itemJson);
         }
 
         return addProvenance(itemJson, playerUuid, profileUuid, container);

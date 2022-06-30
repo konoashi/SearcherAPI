@@ -3,11 +3,23 @@ package fr.konoashi.searcher;
 import me.nullicorn.nedit.type.NBTCompound;
 import me.nullicorn.nedit.type.NBTList;
 import me.nullicorn.nedit.type.TagType;
+import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 public class Utils {
+
+    public static String decompress(final byte[] compressed) throws IOException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(compressed);
+        GZIPInputStream gis = new GZIPInputStream(bis);
+        byte[] bytes = IOUtils.toByteArray(gis);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
 
     public static String nbtCompoundToString(NBTCompound nbt) {
         StringBuilder sb = new StringBuilder();
