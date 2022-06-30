@@ -71,17 +71,30 @@ public class Searcher {
             items.addAll(getInventory(inventoryJson, playerUuid, profileUuid));
         }
 
-//        // get enderchest
-//        JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
-//        if (enderChestJson != null) {
-//            items.addAll(getEnderChest(enderChestJson, playerUuid, profileUuid));
-//        }
+        // get enderchest
+        JsonObject enderChestJson = playerJson.getAsJsonObject("ender_chest_contents");
+        if (enderChestJson != null) {
+            items.addAll(getEnderChest(enderChestJson, playerUuid, profileUuid));
+        }
 
-//        // get wardrobe
-//        JsonObject wardrobeJson = playerJson.getAsJsonObject("wardrobe_contents");
-//        if (wardrobeJson != null) {
-//            items.addAll(getWardrobeJson(wardrobeJson, playerUuid, profileUuid));
-//        }
+        // get wardrobe
+        JsonObject wardrobeJson = playerJson.getAsJsonObject("wardrobe_contents");
+        if (wardrobeJson != null) {
+            items.addAll(getWardrobeJson(wardrobeJson, playerUuid, profileUuid));
+        }
+
+        // get storage backpack
+        JsonObject backpackJson = playerJson.getAsJsonObject("backpack_contents");
+        if (backpackJson != null) {
+            items.addAll(getBackpackJson(backpackJson, playerUuid, profileUuid));
+        }
+
+        // get vault
+        JsonObject vaultJson = playerJson.getAsJsonObject("personal_vault_contents");
+        if (vaultJson != null) {
+            items.addAll(getVaultJson(vaultJson, playerUuid, profileUuid));
+        }
+
 
         return items;
     }
@@ -121,7 +134,7 @@ public class Searcher {
         for (JsonElement petElement : petsJson.getAsJsonArray()) {
 
             JsonObject petJson = petElement.getAsJsonObject();
-            JsonObject formattedPetJson = addProvenance(petJson, playerUuid, profileUuid, "pets");
+            JsonObject formattedPetJson = addProvenance(petJson, playerUuid, profileUuid, "pets_menu");
 
             pets.add(formattedPetJson);
         }
@@ -157,68 +170,121 @@ public class Searcher {
         return items;
     }
 
-//    private static ArrayList<JsonObject> getEnderChest(JsonObject enderChestJson, String playerUuid, String profileUuid) {
-//        ArrayList<JsonObject> items = new ArrayList<>();
-//
-//        String nbt64 = enderChestJson.get("data").getAsString();
-//
-//        try {
-//            NBTCompound nbtlist = b64ToNbtCompound(nbt64);
-//            String nbtJsonString = nbtlist.toString();
-//            //TODO: fix error parsing pet json
-//            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-//
-//            for (JsonElement itemElement : nbtJson) {
-//                JsonObject itemJson = itemElement.getAsJsonObject();
-//                if (itemJson.entrySet().size() == 0) {
-//                    continue;
-//                }
-//
-//                JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "enderchest");
-//                items.add(formattedItemJson);
-//            }
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return items;
-//    }
+    private static ArrayList<JsonObject> getEnderChest(JsonObject enderChestJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
 
-//    private static ArrayList<JsonObject> getWardrobeJson(JsonObject wardrobeJson, String playerUuid, String profileUuid) {
-//        ArrayList<JsonObject> items = new ArrayList<>();
-//
-//        String nbt64 = wardrobeJson.get("data").getAsString();
-//
-//        try {
-//            NBTCompound nbtlist = b64ToNbtCompound(nbt64);
-//            JsonArray petsJsonArray = getPetsJson(nbtlist);
-//            NBTCompound nbtListWithoutPets = petsNbtDispatch(nbtlist);
-//
-//            String nbtJsonString = nbtListWithoutPets.toString();
-//            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
-//            nbtJson.addAll(petsJsonArray);
-//
-//
-//
-//            for (JsonElement itemElement : nbtJson) {
-//                JsonObject itemJson = itemElement.getAsJsonObject();
-//                if (itemJson.entrySet().size() == 0) {
-//                    continue;
-//                }
-//
-//                JsonObject formattedItemJson = addProvenance(itemJson, playerUuid, profileUuid, "wardrobe");
-//                items.add(formattedItemJson);
-//            }
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return items;
-//    }
+        String nbt64 = enderChestJson.get("data").getAsString();
+
+        try {
+            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
+            String nbtJsonString = nbtCompoundToString(nbtCompound);
+
+            //TODO: fix error parsing pet json
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                if (itemJson.entrySet().size() == 0) {
+                    continue;
+                }
+                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "enderchest");
+                items.add(formattedItemJson);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
 
 
+    private static ArrayList<JsonObject> getBackpackJson(JsonObject backpackJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        for (int i = 0; i < backpackJson.size(); i++) {
+            String nbt64 = backpackJson.getAsJsonObject(Integer.toString(i)).get("data").getAsString();
+
+            try {
+                NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
+                String nbtJsonString = nbtCompoundToString(nbtCompound);
+
+                //TODO: fix error parsing pet json
+                JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+                for (JsonElement itemElement : nbtJson) {
+                    JsonObject itemJson = itemElement.getAsJsonObject();
+                    if (itemJson.entrySet().size() == 0) {
+                        continue;
+                    }
+                    JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "backpack " + (i+1));
+                    items.add(formattedItemJson);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+        return items;
+    }
+
+    private static ArrayList<JsonObject> getVaultJson(JsonObject vaultJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        String nbt64 = vaultJson.get("data").getAsString();
+
+        try {
+            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
+            String nbtJsonString = nbtCompoundToString(nbtCompound);
+
+            //TODO: fix error parsing pet json
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                if (itemJson.entrySet().size() == 0) {
+                    continue;
+                }
+                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "vault");
+                items.add(formattedItemJson);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
+    private static ArrayList<JsonObject> getWardrobeJson(JsonObject wardrobeJson, String playerUuid, String profileUuid) {
+        ArrayList<JsonObject> items = new ArrayList<>();
+
+        String nbt64 = wardrobeJson.get("data").getAsString();
+
+        try {
+            NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
+            String nbtJsonString = nbtCompoundToString(nbtCompound);
+
+            //TODO: fix error parsing pet json
+            JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
+
+            for (JsonElement itemElement : nbtJson) {
+                JsonObject itemJson = itemElement.getAsJsonObject();
+                if (itemJson.entrySet().size() == 0) {
+                    continue;
+                }
+                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, "wardrobe");
+                items.add(formattedItemJson);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return items;
+    }
     private static JsonObject handleItem(JsonObject itemJson, String playerUuid, String profileUuid, String container) {
 
         if (itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id").getAsString().equals("PET")) {
