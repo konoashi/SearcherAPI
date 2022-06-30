@@ -147,20 +147,20 @@ public class ProducerConsumer {
                 continue;
             } catch (java.io.IOException e) {
                 System.err.println("[ERROR] Exception while deflating the gzip content, adding back to the queue");
-                try {
-                    uuids.put(uuid);
-                } catch (Exception e1) {
-                    System.err.println("Error while adding a uuid to the queue");
-                    e1.printStackTrace();
-                }
                 continue;
             }
 
             System.out.println("[LOG] Got response from API");
 
-            JsonObject profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
+            JsonObject profilesEndpointJson;
+            try {
+                profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
+            } catch (Exception e) {
+                System.err.println("[ERROR] Exception while parsing the json");
+                e.printStackTrace();
+                continue;
+            }
             ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
-
 
             if (profilesItems == null) {
                 continue;
