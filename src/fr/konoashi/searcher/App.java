@@ -29,6 +29,19 @@ public class App {
             e.printStackTrace();
         }
 
+        /*new Thread(() -> {
+            while (ProducerConsumer.isRunning) {
+                for (Map.Entry<String, Integer> entry : keyToUsage.entrySet()) {
+                    keyToUsage.replace(entry.getKey(), 0);
+                }
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();*/
+
         System.out.println(keyToUsage);
         // TODO: check if keys are valid
 

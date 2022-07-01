@@ -29,7 +29,7 @@ public class ProducerConsumer {
     private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
     private final BlockingQueue<JsonObject> items = new LinkedBlockingQueue<>();
 
-    boolean isRunning = true;
+    public static boolean isRunning = true;
 
     public ProducerConsumer() {
         try {

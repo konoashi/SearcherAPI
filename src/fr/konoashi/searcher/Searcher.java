@@ -96,9 +96,10 @@ public class Searcher {
     private static ArrayList<JsonObject> getPets(JsonArray petsJson, String playerUuid, String profileUuid, String location) {
         ArrayList<JsonObject> pets = new ArrayList<>();
 
+        int slot = 0;
         for (JsonElement petElement : petsJson.getAsJsonArray()) {
             JsonObject petJson = petElement.getAsJsonObject();
-            JsonObject formattedPetJson = handleItem(petJson, playerUuid, profileUuid, location);
+            JsonObject formattedPetJson = handleItem(petJson, playerUuid, profileUuid, location, slot++);
             pets.add(formattedPetJson);
         }
 
@@ -117,12 +118,13 @@ public class Searcher {
             //TODO: fix error parsing pet json
             JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
 
+            int slot = 0;
             for (JsonElement itemElement : nbtJson) {
                 JsonObject itemJson = itemElement.getAsJsonObject();
                 if (itemJson.entrySet().size() == 0) {
                     continue;
                 }
-                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, location);
+                JsonObject formattedItemJson = handleItem(itemJson, playerUuid, profileUuid, location, slot++);
                 items.add(formattedItemJson);
             }
 
@@ -152,7 +154,7 @@ public class Searcher {
         return items;
     }
 
-    private static JsonObject handleItem(JsonObject itemJson, String playerUuid, String profileUuid, String container) {
+    private static JsonObject handleItem(JsonObject itemJson, String playerUuid, String profileUuid, String container, int slot) {
 
         if (
                 itemJson.getAsJsonObject("tag") != null &&
@@ -163,7 +165,7 @@ public class Searcher {
             parsePetInfo(itemJson);
         }
 
-        return addProvenance(itemJson, playerUuid, profileUuid, container);
+        return addProvenance(itemJson, playerUuid, profileUuid, container, slot);
     }
 
     private static void parsePetInfo(JsonObject itemJson) {
@@ -172,11 +174,12 @@ public class Searcher {
         itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").add("petInfo", petInfoJson);
     }
 
-    private static JsonObject addProvenance(JsonObject item, String playerUuid, String profileUuid, String container) {
+    private static JsonObject addProvenance(JsonObject item, String playerUuid, String profileUuid, String container, int slot) {
         JsonObject provenance = new JsonObject();
         provenance.addProperty("player_uuid", playerUuid);
         provenance.addProperty("profile_uuid", profileUuid);
         provenance.addProperty("container", container);
+        provenance.addProperty("slot", slot);
         provenance.add("item", item);
 
         return provenance;
