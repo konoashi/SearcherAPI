@@ -15,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 
@@ -22,7 +23,7 @@ public class ProducerConsumer {
 
     final int API_KEY_LIMIT = 119;
     final int MONGO_BATCH_SIZE = 1000;
-    final int THREADS = 6;
+    final int THREADS = 4;
 
     final Gson gson = new Gson();
 
@@ -198,12 +199,30 @@ public class ProducerConsumer {
         return null;
     };
 
+    private final Callable<Void> keyloop = () -> {
+
+        while (ProducerConsumer.isRunning) {
+            try {
+                Thread.sleep(60000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            for (Map.Entry<String, Integer> entry : keyToUsage.entrySet()) {
+                keyToUsage.replace(entry.getKey(), 0);
+            }
+        }
+
+        System.out.println("[LOG] Api keys loop stopped");
+        return null;
+    };
+
     public void run() throws InterruptedException {
         var pool = Executors.newCachedThreadPool();
         for (int i = 0; i < THREADS; i++) {
             pool.submit(producer);
         }
         pool.submit(consumer);
+        pool.submit(keyloop);
         pool.shutdown();
         //pool.awaitTermination(forHowLong, unit);
     }
