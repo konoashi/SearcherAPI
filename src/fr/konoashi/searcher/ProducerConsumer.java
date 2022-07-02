@@ -1,6 +1,7 @@
 package fr.konoashi.searcher;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -12,11 +13,9 @@ import static fr.konoashi.searcher.App.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 
@@ -28,12 +27,14 @@ public class ProducerConsumer {
 
     final Gson gson = new Gson();
 
+    // HashMap<ID, HashMap<TIER, DefaultItemEntry>>
+    private final HashMap<String, DefaultItemEntry> defaultItems = new HashMap<>();
+    final Searcher searcher = new Searcher(defaultItems);
+
     private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
     private final BlockingQueue<JsonObject> items = new LinkedBlockingQueue<>();
 
     public static boolean isRunning = true;
-
-    public static int uuidUsed = 0;
 
     public ProducerConsumer() {
         try {
@@ -51,7 +52,46 @@ public class ProducerConsumer {
             e.printStackTrace();
         }
 
+        //Fill default items from hypixel's api
+        String defaultItemsRespString;
+        try {
+            defaultItemsRespString = httpGet("https://api.hypixel.net/resources/skyblock/items");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error while getting default items from hypixel's api");
+        }
+        JsonObject defaultItemsRespJson = gson.fromJson(defaultItemsRespString, JsonObject.class);
+
+        for (JsonElement defaultItem : defaultItemsRespJson.getAsJsonArray("items")) {
+            JsonObject defaultItemJson = defaultItem.getAsJsonObject();
+
+            String material = (defaultItemJson.get("material") != null) ? defaultItemJson.get("material").getAsString() : null;
+            String name = (defaultItemJson.get("name") != null) ? defaultItemJson.get("name").getAsString() : null;
+            String tier = (defaultItemJson.get("tier") != null) ? defaultItemJson.get("tier").getAsString() : null;
+            String id = (defaultItemJson.get("id") != null) ? defaultItemJson.get("id").getAsString() : null;
+            String color = (defaultItemJson.get("color") != null) ? defaultItemJson.get("color").getAsString().replace(",", ":") : null;
+
+            if (id == null) {
+                continue;
+            }
+
+            DefaultItemEntry defaultItemEntry = new DefaultItemEntry(material, name, tier, id, color);
+
+            defaultItems.put(id, defaultItemEntry);
+        }
+
+//        System.out.println(defaultItems);
+
         //TODO: Friendlist à ajouter ici
+    }
+
+    private void addUuidToQueue(String uuid) {
+        try {
+            uuids.put(uuid);
+        } catch (Exception e) {
+            System.err.println("Error while adding a uuid to the queue");
+            e.printStackTrace();
+        }
     }
 
     private void insertInMongo(MongoCollection<Document> collection, ArrayList<JsonObject> items) {
@@ -60,6 +100,41 @@ public class ProducerConsumer {
             documents.add(Document.parse(gson.toJson(item)));
         }
         collection.insertMany(documents);
+    }
+
+    private String httpGet(String _url) throws ForbiddenException, SocketTimeoutException, IOException {
+        BufferedReader rd;
+        StringBuilder sb = new StringBuilder();
+        String line;
+        HttpURLConnection con;
+        try {
+            URL url = new URL(_url);
+            con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept-Encoding", "gzip");
+            con.setConnectTimeout(2000);
+            con.connect();
+        } catch (SocketTimeoutException e) {
+            throw new SocketTimeoutException();
+        }
+
+        String encoding = con.getContentEncoding();
+
+        // if Forbidden, key is dead
+        if (con.getResponseCode() == 403 || encoding == null) {
+            throw new ForbiddenException("Key is dead");
+        } else if (encoding.equals("gzip")) {
+            rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
+        } else {
+            rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        }
+
+        while ((line = rd.readLine()) != null) {
+            sb.append(line).append('\n');
+        }
+        con.disconnect();
+
+        return sb.toString();
     }
 
     private final Callable<Void> consumer = () -> {
@@ -127,9 +202,6 @@ public class ProducerConsumer {
             //Increment by 1 the key usage
             keyToUsage.merge(key, 1, Integer::sum);
 
-            BufferedReader rd;
-            StringBuilder sb = new StringBuilder();
-            String line;
             var uuid = uuids.poll(1, TimeUnit.SECONDS);
             if (uuid == null) {
                 System.out.println("[LOG] No uuid left, stopping");
@@ -144,60 +216,41 @@ public class ProducerConsumer {
                     " from " + Thread.currentThread().getName()
             );
 
-
+            String response;
             try {
-                URL url = new URL("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + uuid);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
-                con.setRequestProperty("Accept-Encoding", "gzip");
-                con.setConnectTimeout(2000);
-                con.connect();
-
-//                rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
-
-                if (Objects.equals(con.getResponseMessage(), "Forbidden")) {
-                    System.err.println("[ERROR] The api key is probably invalid, adding uuid back to the queue");
-                    uuids.put(uuid);
-                    //TODO: peut-être drop la key ou switch sur une autre list de keys car hypixel invalidate toutes les keys donc eles sont probablement toutes mortes
-                continue;
-                }
-                else if ("gzip".equals(con.getContentEncoding())) {
-                    rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
-                }
-                else {
-                    rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                }
-
-                while ((line = rd.readLine()) != null) {
-                    sb.append(line).append('\n');
-                }
-                con.disconnect();
+                response = httpGet("https://api.hypixel.net/skyblock/profiles?key=" + key +"&uuid=" + uuid);
             } catch (java.net.SocketTimeoutException e) {
                 System.err.println("[ERROR] Socket timeout, adding back to the queue");
-                try {
-                    uuids.put(uuid);
-                } catch (Exception e1) {
-                    System.err.println("Error while adding a uuid to the queue");
-                    e1.printStackTrace();
-                }
+                addUuidToQueue(uuid);
                 continue;
             } catch (java.io.IOException e) {
-                System.err.println("[ERROR] Exception while deflating the gzip content, adding back to the queue");
+                System.err.println("[ERROR] Exception while deflating the gzip content, skipping uuid");
+                continue;
+            } catch (ForbiddenException e) {
+                System.err.println("[ERROR] Key is dead, adding back to the queue");
+
+                //TODO: remove key from keyToUsage ??
+                addUuidToQueue(uuid);
+                continue;
+            } catch (Exception e) {
+                System.err.println("[ERROR] Exception while getting the content, skipping uuid");
+                e.printStackTrace();
                 continue;
             }
+
 
             System.out.println("[LOG] Got response from API");
 
             JsonObject profilesEndpointJson;
             try {
-                profilesEndpointJson = gson.fromJson(sb.toString(), JsonObject.class);
+                profilesEndpointJson = gson.fromJson(response, JsonObject.class);
             } catch (Exception e) {
                 System.err.println("[ERROR] Exception while parsing the json");
                 e.printStackTrace();
                 continue;
             }
 
-            ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
+            ArrayList<JsonObject> profilesItems = searcher.getProfilesItems(profilesEndpointJson);
 
             if (profilesItems == null) {
                 continue;
