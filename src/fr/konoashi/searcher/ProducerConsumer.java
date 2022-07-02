@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.zip.GZIPInputStream;
 
@@ -23,7 +24,7 @@ public class ProducerConsumer {
 
     final int API_KEY_LIMIT = 119;
     final int MONGO_BATCH_SIZE = 1000;
-    final int THREADS = 4;
+    final int THREADS = 8;
 
     final Gson gson = new Gson();
 
@@ -31,6 +32,8 @@ public class ProducerConsumer {
     private final BlockingQueue<JsonObject> items = new LinkedBlockingQueue<>();
 
     public static boolean isRunning = true;
+
+    public static int uuidUsed = 0;
 
     public ProducerConsumer() {
         try {
@@ -100,7 +103,7 @@ public class ProducerConsumer {
                 e.printStackTrace();
             }
         }
-
+        
         insertInMongo(collection, itemsToInsert);
         System.out.println("[LOG] Consumer stopped");
         return null;
@@ -151,7 +154,14 @@ public class ProducerConsumer {
                 con.connect();
 
 //                rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
-                if ("gzip".equals(con.getContentEncoding())) {
+
+                if (Objects.equals(con.getResponseMessage(), "Forbidden")) {
+                    System.err.println("[ERROR] The api key is probably invalid, adding uuid back to the queue");
+                    uuids.put(uuid);
+                    //TODO: peut-être drop la key ou switch sur une autre list de keys car hypixel invalidate toutes les keys donc eles sont probablement toutes mortes
+                continue;
+                }
+                else if ("gzip".equals(con.getContentEncoding())) {
                     rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
                 }
                 else {
@@ -186,6 +196,7 @@ public class ProducerConsumer {
                 e.printStackTrace();
                 continue;
             }
+
             ArrayList<JsonObject> profilesItems = Searcher.getProfilesItems(profilesEndpointJson);
 
             if (profilesItems == null) {
