@@ -188,7 +188,8 @@ public class Searcher {
                     // this is a default item, so we can skip it
                     return null;
                 }
-                else if (itemColor != null && defaultItem.hasColor() && defaultItem.getColor().equals(itemColor)) {
+                else if (itemColor != null && defaultItem.hasColor() && (defaultItem.getColor().equals(itemColor)
+                        || itemColor.equals("160:101:64"))) {
                     // this is a default item, but it has a color, but the color is default, so we can skip it
                     return null;
                 }
