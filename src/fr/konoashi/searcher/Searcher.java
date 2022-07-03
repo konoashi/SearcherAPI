@@ -7,6 +7,7 @@ import me.nullicorn.nedit.type.NBTCompound;
 import com.google.gson.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.*;
 import java.util.Objects;
@@ -17,13 +18,18 @@ public class Searcher {
     private final Gson gson = new Gson();
 
     HashMap<String, DefaultItemEntry> defaultItems;
+    HashMap<String, DefaultPetEntry> defaultPets;
 
-    public Searcher(HashMap<String, DefaultItemEntry> defaultItems) {
+    public Searcher(HashMap<String, DefaultItemEntry> defaultItems, HashMap<String, DefaultPetEntry> defaultPets) {
         this.defaultItems = defaultItems;
+        this.defaultPets = defaultPets;
     }
 
     private DefaultItemEntry getDefaultItem(String id) {
         return defaultItems.get(id);
+    }
+    private DefaultPetEntry getDefaultPet(String type) {
+        return defaultPets.get(type);
     }
 
     public ArrayList<JsonObject> getProfilesItems(JsonObject profilesJson) {
@@ -113,9 +119,12 @@ public class Searcher {
         for (JsonElement petElement : petsJson.getAsJsonArray()) {
             JsonObject petJson = petElement.getAsJsonObject();
             JsonObject formattedPetJson = handleItem(petJson, playerUuid, profileUuid, location, slot++);
-            if (formattedPetJson != null) {
-                pets.add(formattedPetJson);
+
+            if (formattedPetJson == null) {
+                continue;
             }
+                pets.add(formattedPetJson);
+
         }
 
         return pets;
@@ -188,7 +197,6 @@ public class Searcher {
                     itemName.contains(defaultItem.getName()) &&
                             (itemColor == null || (itemMaterial != 301 || itemMaterial != 300 || itemMaterial != 299 || itemMaterial != 298)) ||
                             Objects.equals(originTag, "FIRE_SALE")
-
                 ) {
                     // this is a default item, so we can skip it
                     return null;
@@ -208,8 +216,14 @@ public class Searcher {
                         itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id").getAsString().equals("PET")
         ) {
             parsePetInfo(itemJson);
-            if (Objects.equals(container, "pets")) {
-
+            DefaultPetEntry defaultPet = getDefaultPet(itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").getAsJsonObject("petInfo").get("type").getAsString());
+            if (Arrays.asList(defaultPet.getTier()).contains(itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").getAsJsonObject("petInfo").get("tier").getAsString()) && !itemJson.getAsJsonObject("tag").getAsJsonObject("display").get("Name").getAsString().contains("Mystery")) {
+                return null;
+            }
+        } else if (itemJson.get("type") != null && itemJson.get("tier") != null) {
+            DefaultPetEntry defaultPet = getDefaultPet(itemJson.get("type").getAsString());
+            if (Arrays.asList(defaultPet.getTier()).contains(itemJson.get("tier").getAsString())) {
+                return null;
             }
         }
 

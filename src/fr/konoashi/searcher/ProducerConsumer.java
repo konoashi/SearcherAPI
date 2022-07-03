@@ -1,6 +1,7 @@
 package fr.konoashi.searcher;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.MongoClient;
@@ -29,8 +30,8 @@ public class ProducerConsumer {
 
     // HashMap<ID, HashMap<TIER, DefaultItemEntry>>
     private final HashMap<String, DefaultItemEntry> defaultItems = new HashMap<>();
-
-    final Searcher searcher = new Searcher(defaultItems);
+    private final HashMap<String, DefaultPetEntry> defaultPets = new HashMap<>();
+    final Searcher searcher = new Searcher(defaultItems, defaultPets);
 
     private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
     private final BlockingQueue<JsonObject> items = new LinkedBlockingQueue<>();
@@ -79,6 +80,23 @@ public class ProducerConsumer {
             DefaultItemEntry defaultItemEntry = new DefaultItemEntry(material, name, tier, id, color);
 
             defaultItems.put(id, defaultItemEntry);
+        }
+
+        for (JsonElement defaultPet : Utils.petExclude.getAsJsonArray("pets")) {
+            JsonObject defaultPetJson = defaultPet.getAsJsonObject();
+
+            JsonArray tier = (defaultPetJson.get("rarities") != null) ? defaultPetJson.get("rarities").getAsJsonArray() : null;
+            String type = (defaultPetJson.get("name") != null) ? defaultPetJson.get("name").getAsString() : null;
+            if (tier == null || type == null) {
+                continue;
+            }
+            String[] tierArray = new String[tier.size()];
+            for(int i = 0; i < tier.size(); i++)
+                tierArray[i] = tier.get(i).getAsString();
+
+            DefaultPetEntry defaultItemEntry = new DefaultPetEntry(tierArray, type);
+
+            defaultPets.put(type, defaultItemEntry);
         }
 
 //        System.out.println(defaultItems);

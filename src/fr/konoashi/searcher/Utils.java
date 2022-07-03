@@ -18,9 +18,9 @@ import java.util.zip.GZIPInputStream;
 
 public class Utils {
 
-    private final Gson gson = new Gson();
+    public static final Gson gson = new Gson();
 
-    private final String petsExcludeJson = "{\"pets\":[\n" +
+    private static final String petsExcludeJson = "{\"pets\":[\n" +
             "  {\n" +
             "   \"name\": \"BAT\", \n" +
             "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\", \"MYTHIC\"]\n" +
@@ -110,7 +110,7 @@ public class Utils {
             "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
-            "   \"name\": \"MOOSHROOM\", \n" +
+            "   \"name\": \"MOOSHROOM_COW\", \n" +
             "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
@@ -166,7 +166,7 @@ public class Utils {
             "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
-            "   \"name\": \"WISP\", \n" +
+            "   \"name\": \"DROPLET_WISP\", \n" +
             "   \"rarities\": [\"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
@@ -202,7 +202,7 @@ public class Utils {
             "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
-            "   \"name\": \"JELLY_FISH\", \n" +
+            "   \"name\": \"JELLYFISH\", \n" +
             "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
             "  },\n" +
             "  {\n" +
@@ -264,7 +264,7 @@ public class Utils {
             "  \n" +
             "]}";
 
-    final JsonObject petExclude = gson.fromJson(petsExcludeJson, JsonObject.class).getAsJsonObject();
+    final public static JsonObject petExclude = gson.fromJson(petsExcludeJson, JsonObject.class);
 
     public static String decompress(final byte[] compressed) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(compressed);
