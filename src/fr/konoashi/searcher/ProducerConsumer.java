@@ -29,6 +29,7 @@ public class ProducerConsumer {
 
     // HashMap<ID, HashMap<TIER, DefaultItemEntry>>
     private final HashMap<String, DefaultItemEntry> defaultItems = new HashMap<>();
+
     final Searcher searcher = new Searcher(defaultItems);
 
     private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
@@ -119,11 +120,10 @@ public class ProducerConsumer {
         }
 
         String encoding = con.getContentEncoding();
-
         // if Forbidden, key is dead
-        if (con.getResponseCode() == 403 || encoding == null) {
+        if (con.getResponseCode() == 403) {
             throw new ForbiddenException("Key is dead");
-        } else if (encoding.equals("gzip")) {
+        } else if (encoding != null && encoding.equals("gzip")) {
             rd = new BufferedReader(new InputStreamReader(new GZIPInputStream(con.getInputStream())));
         } else {
             rd = new BufferedReader(new InputStreamReader(con.getInputStream()));

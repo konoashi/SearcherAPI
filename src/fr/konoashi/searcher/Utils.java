@@ -1,5 +1,9 @@
 package fr.konoashi.searcher;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.nullicorn.nedit.type.NBTCompound;
 import me.nullicorn.nedit.type.NBTList;
 import me.nullicorn.nedit.type.TagType;
@@ -13,6 +17,254 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 public class Utils {
+
+    private final Gson gson = new Gson();
+
+    private final String petsExcludeJson = "{\"pets\":[\n" +
+            "  {\n" +
+            "   \"name\": \"BAT\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\", \"MYTHIC\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ENDERMAN\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\", \"MYTHIC\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"JERRY\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\", \"MYTHIC\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"FLYING_FISH\", \n" +
+            "   \"rarities\": [\"RARE\", \"EPIC\", \"LEGENDARY\", \"MYTHIC\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ARMADILLO\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BEE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BINGO\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BLUE_WHALE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"CHICKEN\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"DOLPHIN\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ELEPHANT\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ENDERMITE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GIRAFFE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GRANDMA_WOLF\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GRIFFIN\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GUARDIAN\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"HORSE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"KUUDRA\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"LION\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"MAGMA_CUBE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"MITHRIL_GOLEM\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"MONKEY\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"MOOSHROOM\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"OCELOT\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"PIG\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"RABBIT\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ROCK\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SHEEP\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SILVERFISH\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SKELETON\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SNAIL\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SPIDER\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SQUID\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"TIGER\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"WOLF\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ZOMBIE\", \n" +
+            "   \"rarities\": [\"COMMON\", \"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"WISP\", \n" +
+            "   \"rarities\": [\"UNCOMMON\", \"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SCATHA\", \n" +
+            "   \"rarities\": [\"RARE\", \"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BABY_YETI\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BAL\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BLAZE\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"ENDER_DRAGON\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GHOUL\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GOLEM\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"HOUND\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"JELLY_FISH\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"MEGALODON\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"PARROT\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"PHOENIX\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"PIGMAN\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SPIRIT\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"TARANTULA\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"TURTLE\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"WITHER_SKELETON\", \n" +
+            "   \"rarities\": [\"EPIC\", \"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"AMMONITE\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"BLACK_CAT\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"GOLDEN_DRAGON\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"RAT\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SKELETON_HORSE\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  },\n" +
+            "  {\n" +
+            "   \"name\": \"SNOWMAN\", \n" +
+            "   \"rarities\": [\"LEGENDARY\"]\n" +
+            "  }\n" +
+            "  \n" +
+            "]}";
+
+    final JsonObject petExclude = gson.fromJson(petsExcludeJson, JsonObject.class).getAsJsonObject();
 
     public static String decompress(final byte[] compressed) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(compressed);

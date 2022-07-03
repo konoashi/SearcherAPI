@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.*;
+import java.util.Objects;
 
 
 public class Searcher {
@@ -174,6 +175,8 @@ public class Searcher {
     private JsonObject handleItem(JsonObject itemJson, String playerUuid, String profileUuid, String container, int slot) {
         String itemId = getId(itemJson);
         String itemName = getName(itemJson);
+        String originTag = getOriginTag(itemJson);
+        Integer itemMaterial = getMaterial(itemJson);
         if (itemId != null && itemName != null) {
             // get the default item
             DefaultItemEntry defaultItem = getDefaultItem(itemId);
@@ -183,12 +186,14 @@ public class Searcher {
                 if (
                     defaultItem.getName() != null &&
                     itemName.contains(defaultItem.getName()) &&
-                    itemColor == null
+                            (itemColor == null || (itemMaterial != 301 || itemMaterial != 300 || itemMaterial != 299 || itemMaterial != 298)) ||
+                            Objects.equals(originTag, "FIRE_SALE")
+
                 ) {
                     // this is a default item, so we can skip it
                     return null;
                 }
-                else if (itemColor != null && defaultItem.hasColor() && (defaultItem.getColor().equals(itemColor)
+                else if ((itemMaterial == 301 || itemMaterial == 300 || itemMaterial == 299 || itemMaterial == 298) && itemColor != null && defaultItem.hasColor() && (defaultItem.getColor().equals(itemColor)
                         || itemColor.equals("160:101:64"))) {
                     // this is a default item, but it has a color, but the color is default, so we can skip it
                     return null;
@@ -203,6 +208,9 @@ public class Searcher {
                         itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("id").getAsString().equals("PET")
         ) {
             parsePetInfo(itemJson);
+            if (Objects.equals(container, "pets")) {
+
+            }
         }
 
 //        if (!container.equals("pets"))
@@ -220,9 +228,11 @@ public class Searcher {
         return color;
     }
 
-    private String getMaterial(JsonObject itemJson) {
+    private Integer getMaterial(JsonObject itemJson) {
         if (itemJson != null) {
-                return itemJson.getAsJsonObject("id").getAsString();
+            if (itemJson.get("id") != null) {
+                return itemJson.get("id").getAsInt();
+            }
         }
         return null;
     }
@@ -235,6 +245,18 @@ public class Searcher {
         }
         return null;
     }
+
+    private String getOriginTag(JsonObject itemJson) {
+        if (itemJson.getAsJsonObject("tag") != null &&
+                itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes") != null &&
+                itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("originTag") != null) {
+            return itemJson.getAsJsonObject("tag").getAsJsonObject("ExtraAttributes").get("originTag").getAsString();
+        }
+        return null;
+    }
+
+
+
 
     private String getName(JsonObject itemJson) {
         if (itemJson.getAsJsonObject("tag") != null &&
