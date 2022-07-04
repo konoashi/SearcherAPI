@@ -76,6 +76,9 @@ public class ProducerConsumer {
             if (id == null) {
                 continue;
             }
+            if (Arrays.stream(Utils.excludeFromItemsApi).anyMatch(item -> item.equals(id)) || id.contains("CATACOMBS_PASS") || id.contains("BANNER")) {
+                continue;
+            }
 
             DefaultItemEntry defaultItemEntry = new DefaultItemEntry(material, name, tier, id, color);
 
