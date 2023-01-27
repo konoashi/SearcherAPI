@@ -245,7 +245,7 @@ public class ProducerConsumer {
                 addUuidToQueue(uuid);
                 continue;
             } catch (java.io.IOException e) {
-                System.err.println("[ERROR] Exception while deflating the gzip content, skipping uuid");
+                System.err.println("[ERROR] " + e.toString() );
                 continue;
             } catch (ForbiddenException e) {
                 System.err.println("[ERROR] Key is dead, adding back to the queue");
@@ -260,7 +260,7 @@ public class ProducerConsumer {
             }
 
 
-            System.out.println("[LOG] Got response from API");
+            System.out.println("[LOG] Got response from API for uuid: " + uuid);
 
             JsonObject profilesEndpointJson;
             try {

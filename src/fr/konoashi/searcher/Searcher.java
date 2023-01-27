@@ -20,6 +20,8 @@ public class Searcher {
     HashMap<String, DefaultItemEntry> defaultItems;
     HashMap<String, DefaultPetEntry> defaultPets;
 
+    boolean filterOn = false;
+
     public Searcher(HashMap<String, DefaultItemEntry> defaultItems, HashMap<String, DefaultPetEntry> defaultPets) {
         this.defaultItems = defaultItems;
         this.defaultPets = defaultPets;
@@ -42,12 +44,14 @@ public class Searcher {
             return null;
         }
 
+        //System.out.println("entered");
         ArrayList<JsonObject> items = new ArrayList<>();
         for (JsonElement profileElement : profiles) {
             JsonObject profileJson = profileElement.getAsJsonObject();
             ArrayList<JsonObject> profileItems = getProfileItems(profileJson);
             items.addAll(profileItems);
         }
+        //System.out.println("out");
 
         return items;
     }
@@ -186,28 +190,31 @@ public class Searcher {
         String itemName = getName(itemJson);
         String originTag = getOriginTag(itemJson);
         Integer itemMaterial = getMaterial(itemJson);
-        if (itemId != null && itemName != null) {
-            // get the default item
-            DefaultItemEntry defaultItem = getDefaultItem(itemId);
+        if (filterOn) {
+            if (itemId != null && itemName != null) {
+                // get the default item
+                DefaultItemEntry defaultItem = getDefaultItem(itemId);
 
-            String itemColor = getColor(itemJson);
-            if (defaultItem != null) {
-                if (
-                    defaultItem.getName() != null &&
-                    itemName.contains(defaultItem.getName()) &&
-                            (itemColor == null || (itemMaterial != 301 || itemMaterial != 300 || itemMaterial != 299 || itemMaterial != 298)) ||
-                            Objects.equals(originTag, "FIRE_SALE")
-                ) {
-                    // this is a default item, so we can skip it
-                    return null;
-                }
-                else if ((itemMaterial == 301 || itemMaterial == 300 || itemMaterial == 299 || itemMaterial == 298) && itemColor != null && defaultItem.hasColor() && (defaultItem.getColor().equals(itemColor)
-                        || itemColor.equals("160:101:64"))) {
-                    // this is a default item, but it has a color, but the color is default, so we can skip it
-                    return null;
+                String itemColor = getColor(itemJson);
+                if (defaultItem != null) {
+                    if (
+                            defaultItem.getName() != null &&
+                                    itemName.contains(defaultItem.getName()) &&
+                                    (itemColor == null || (itemMaterial != 301 || itemMaterial != 300 || itemMaterial != 299 || itemMaterial != 298)) ||
+                                    Objects.equals(originTag, "FIRE_SALE")
+                    ) {
+                        // this is a default item, so we can skip it
+                        return null;
+                    }
+                    else if ((itemMaterial == 301 || itemMaterial == 300 || itemMaterial == 299 || itemMaterial == 298) && itemColor != null && defaultItem.hasColor() && (defaultItem.getColor().equals(itemColor)
+                            || itemColor.equals("160:101:64"))) {
+                        // this is a default item, but it has a color, but the color is default, so we can skip it
+                        return null;
+                    }
                 }
             }
         }
+
 
         if (
                 itemJson.getAsJsonObject("tag") != null &&
