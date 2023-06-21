@@ -22,9 +22,9 @@ import java.util.zip.GZIPInputStream;
 
 public class ProducerConsumer {
 
-    final int API_KEY_LIMIT = 119;
+    final int API_KEY_LIMIT = 299;
     final int MONGO_BATCH_SIZE = 1000;
-    final int THREADS = 8;
+    final int THREADS = 4;
 
     final Gson gson = new Gson();
 
@@ -217,7 +217,7 @@ public class ProducerConsumer {
             if (keyToUsage.get(key) > API_KEY_LIMIT) {
                 System.err.println("[ERROR] No more keys available");
                 System.err.println(keyToUsage);
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 continue;
             }
             //Increment by 1 the key usage
@@ -288,7 +288,7 @@ public class ProducerConsumer {
 
         while (ProducerConsumer.isRunning) {
             try {
-                Thread.sleep(60000);
+                Thread.sleep(300000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
