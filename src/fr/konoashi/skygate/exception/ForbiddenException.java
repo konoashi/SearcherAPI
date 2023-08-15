@@ -1,4 +1,4 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate.exception;
 
 public class ForbiddenException extends Exception {
     public ForbiddenException(String message) {

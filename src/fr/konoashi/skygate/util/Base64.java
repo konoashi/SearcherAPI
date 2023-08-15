@@ -1,4 +1,4 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate.util;
 
 import me.nullicorn.nedit.NBTReader;
 import me.nullicorn.nedit.type.NBTCompound;

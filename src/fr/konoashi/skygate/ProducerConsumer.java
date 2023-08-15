@@ -1,4 +1,4 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -8,9 +8,14 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import fr.konoashi.skygate.util.Utils;
+import fr.konoashi.skygate.entries.DefaultItemEntry;
+import fr.konoashi.skygate.entries.DefaultPetEntry;
+import fr.konoashi.skygate.exception.ForbiddenException;
+import fr.konoashi.skygate.service.Searcher;
 import org.bson.Document;
 
-import static fr.konoashi.searcher.App.*;
+import static fr.konoashi.skygate.App.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;

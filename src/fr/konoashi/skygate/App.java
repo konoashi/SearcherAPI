@@ -1,6 +1,4 @@
-package fr.konoashi.searcher;
-
-import com.google.gson.JsonElement;
+package fr.konoashi.skygate;
 
 import java.io.*;
 import java.util.*;

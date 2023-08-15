@@ -1,4 +1,4 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate.entries;
 
 public class DefaultPetEntry {
     public String type;

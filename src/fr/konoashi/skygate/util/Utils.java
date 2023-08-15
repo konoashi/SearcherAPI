@@ -1,4 +1,4 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

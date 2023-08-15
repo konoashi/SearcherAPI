@@ -1,8 +1,10 @@
-package fr.konoashi.searcher;
+package fr.konoashi.skygate.service;
 
-import static fr.konoashi.searcher.Base64.b64ToNbtCompound;
-import static fr.konoashi.searcher.Utils.nbtCompoundToString;
+import static fr.konoashi.skygate.util.Base64.b64ToNbtCompound;
 
+import fr.konoashi.skygate.entries.DefaultItemEntry;
+import fr.konoashi.skygate.entries.DefaultPetEntry;
+import fr.konoashi.skygate.util.Utils;
 import me.nullicorn.nedit.type.NBTCompound;
 import com.google.gson.*;
 import java.io.IOException;
@@ -145,7 +147,7 @@ public class Searcher {
 
         try {
             NBTCompound nbtCompound = b64ToNbtCompound(nbt64);
-            String nbtJsonString = nbtCompoundToString(nbtCompound);
+            String nbtJsonString = Utils.nbtCompoundToString(nbtCompound);
 
             //TODO: fix error parsing pet json
             JsonArray nbtJson = gson.fromJson(nbtJsonString, JsonObject.class).getAsJsonArray("i");
