@@ -1,9 +1,8 @@
-# SearcherAPI
+# SkyGate Project
 
-A hypixel skyblock playerbase scanner written in java.
+A simple hypixel skyblock playerbase tool.
 
 ## Features
 - Multiple Api key Support
 - Exotics finder
 
-and more to come...
