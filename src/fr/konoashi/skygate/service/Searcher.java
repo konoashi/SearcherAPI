@@ -304,8 +304,13 @@ public class Searcher {
         provenance.addProperty("profile_uuid", profileUuid);
         provenance.addProperty("container", container);
         provenance.addProperty("slot", slot);
-        provenance.add("item", item);
-
+        switch (container) {
+            case "pets":
+                provenance.add("pet", item);
+                break;
+            default:
+                provenance.add("item", item);
+        }
         return provenance;
     }
 }
