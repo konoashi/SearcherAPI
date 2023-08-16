@@ -41,6 +41,8 @@ public class ProducerConsumer {
     private final BlockingQueue<String> uuids = new LinkedBlockingQueue<>();
     private final BlockingQueue<JsonObject> items = new LinkedBlockingQueue<>();
 
+    public List<String> uuidsCompleted = new ArrayList<>();
+
     public static boolean isRunning = true;
 
     public ProducerConsumer() {
@@ -276,7 +278,7 @@ public class ProducerConsumer {
                 continue;
             }
 
-            ArrayList<JsonObject> profilesItems = searcher.getProfilesItems(profilesEndpointJson);
+            ArrayList<JsonObject> profilesItems = searcher.getProfilesItems(uuid ,profilesEndpointJson);
 
             if (profilesItems == null) {
                 continue;

@@ -2,6 +2,7 @@ package fr.konoashi.skygate.service;
 
 import static fr.konoashi.skygate.util.Base64.b64ToNbtCompound;
 
+import fr.konoashi.skygate.App;
 import fr.konoashi.skygate.entries.DefaultItemEntry;
 import fr.konoashi.skygate.entries.DefaultPetEntry;
 import fr.konoashi.skygate.util.Utils;
@@ -36,7 +37,7 @@ public class Searcher {
         return defaultPets.get(type);
     }
 
-    public ArrayList<JsonObject> getProfilesItems(JsonObject profilesJson) {
+    public ArrayList<JsonObject> getProfilesItems(String playerUuid, JsonObject profilesJson) {
         if (profilesJson == null || profilesJson.isJsonNull() || !profilesJson.has("profiles") || profilesJson.get("profiles").isJsonNull()) {
             return null;
         }
@@ -53,6 +54,9 @@ public class Searcher {
             items.addAll(profileItems);
         }
 
+        //Add player to the list of already checked users
+        App.producerConsumer.uuidsCompleted.add(playerUuid);
+
         return items;
     }
 
@@ -62,7 +66,6 @@ public class Searcher {
 //        String cuteName = profileJson.get("cute_name").getAsString();
 
         ArrayList<JsonObject> items = new ArrayList<>();
-        System.out.println("members: " + profileJson.getAsJsonObject("members").entrySet().size());
         for (Entry<String, JsonElement> memberEntry : profileJson.getAsJsonObject("members").entrySet()) {
             String memberUuid = memberEntry.getKey();
             JsonObject memberJson = memberEntry.getValue().getAsJsonObject();
@@ -75,8 +78,12 @@ public class Searcher {
 
     public ArrayList<JsonObject> getMemberItems(JsonObject playerJson, String playerUuid, String profileUuid) {
 
-        ArrayList<JsonObject> items = new ArrayList<>();
+        //Check if the player has been already checked
+        if (App.producerConsumer.uuidsCompleted.contains(playerUuid)) {
+            return null;
+        }
 
+        ArrayList<JsonObject> items = new ArrayList<>();
 
         // get pets
         JsonArray petsJson = playerJson.getAsJsonArray("pets");

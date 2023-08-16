@@ -13,6 +13,8 @@ public class App {
     static ConcurrentHashMap<String, Integer> keyToUsage
             = new ConcurrentHashMap<>();
 
+    public static ProducerConsumer producerConsumer;
+
     public static void main(String[] args) {
         new App();
     }
@@ -31,7 +33,7 @@ public class App {
         // TODO: check if keys are valid
 
         //Data Consumer & Producer
-        var producerConsumer = new ProducerConsumer();
+        producerConsumer = new ProducerConsumer();
         try {
             producerConsumer.run();
         } catch (InterruptedException e) {
